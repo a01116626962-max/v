@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="theme-color" content="#2d7a68" />
+<title>Imparo Verbi — تصريف الأفعال</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%232d7a68'/><text x='50' y='68' font-size='60' text-anchor='middle' fill='white' font-family='Georgia'>V</text></svg>">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+[hidden] { display: none !important; }
+
+:root {
+  --bg:#f7f5f0; --surface:#fff; --surface-2:#fbfaf7;
+  --primary:#2d7a68; --primary-dark:#1f5a4c; --primary-soft:#e4f1ed;
+  --easy:#4caf7d; --easy-soft:#e6f5ee;
+  --medium:#eba827; --medium-soft:#fdf3e0;
+  --hard:#e76f51; --hard-soft:#fbe8e2;
+  --skip:#8a9995;
+  --text:#23302c; --text-soft:#6b7a76; --border:#ece8e1;
+  --shadow-sm:0 1px 3px rgba(30,45,40,.06);
+  --shadow-lg:0 10px 30px rgba(30,45,40,.14);
+  --radius-sm:12px; --radius:16px; --radius-lg:22px;
+}
+html, body { height:100%; background:var(--bg); color:var(--text);
+  font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Kufi Arabic", "Tahoma", sans-serif;
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased; overscroll-behavior-y:none; }
+body { min-height:100vh; }
+
+/* Boot/Error */
+.boot-screen,.error-screen { position:fixed; inset:0; z-index:999; background:var(--bg);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; padding:24px; text-align:center; }
+.boot-logo { display:flex; align-items:center; gap:10px; }
+.boot-logo h1 { font-size:28px; font-weight:800; color:var(--primary-dark); }
+.boot-logo .brand-dot { width:16px; height:16px; border-radius:50%; background:var(--primary); box-shadow:0 0 0 6px var(--primary-soft); }
+.boot-spinner { width:38px; height:38px; border:3px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.boot-text { color:var(--text-soft); font-size:14px; min-height:20px; }
+.error-icon { font-size:56px; }
+.error-screen h2 { font-size:20px; font-weight:800; color:var(--hard); }
+.error-screen p { color:var(--text-soft); font-size:14px; max-width:340px; white-space:pre-wrap; }
+.error-screen .btn { max-width:240px; }
+
+.app { max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; background:var(--bg); }
+.app-header { position:sticky; top:0; z-index:20; display:flex; align-items:center; justify-content:space-between;
+  padding:14px 18px; background:rgba(247,245,240,.88); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border); }
+.brand { display:flex; align-items:center; gap:8px; }
+.brand-dot { width:12px; height:12px; border-radius:50%; background:var(--primary); box-shadow:0 0 0 4px var(--primary-soft); }
+.brand h1 { font-size:18px; font-weight:700; letter-spacing:.3px; color:var(--primary-dark); }
+.header-meta { display:flex; align-items:center; gap:10px; }
+.sync-dot { width:9px; height:9px; border-radius:50%; background:#b9c7c3; transition:background .2s; }
+.sync-dot.online { background:var(--easy); box-shadow:0 0 0 3px rgba(76,175,125,.2); }
+.sync-dot.syncing { background:var(--medium); animation:pulse 1s infinite; }
+.sync-dot.offline { background:var(--hard); }
+@keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.2);} }
+.streak-badge { display:inline-flex; align-items:center; gap:6px; background:#fff; padding:6px 12px;
+  border-radius:999px; border:1px solid var(--border); font-weight:700; font-size:14px; color:var(--hard); box-shadow:var(--shadow-sm); }
+.app-main { flex:1; padding:18px; padding-bottom:40px; }
+.view { display:none; animation:fadeUp .25s ease; }
+.view.is-active { display:block; }
+@keyframes fadeUp { from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+
+.stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
+.stat-card { background:var(--surface); border-radius:var(--radius); padding:14px 12px; text-align:center;
+  box-shadow:var(--shadow-sm); border:1px solid var(--border); }
+.stat-value { font-size:24px; font-weight:800; color:var(--primary-dark); line-height:1.2; }
+.stat-label { font-size:12px; color:var(--text-soft); margin-top:2px; }
+
+.btn { border:none; border-radius:var(--radius); padding:14px 18px; font-family:inherit; font-size:15px; font-weight:700;
+  cursor:pointer; transition:transform .12s, box-shadow .2s, background .2s;
+  display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; }
+.btn:active { transform:scale(.98); }
+.btn:disabled { opacity:.6; cursor:not-allowed; }
+.btn-primary { background:var(--primary); color:#fff; box-shadow:0 6px 16px rgba(45,122,104,.28); }
+.btn-primary:hover:not(:disabled) { background:var(--primary-dark); }
+.btn-secondary { background:var(--primary-soft); color:var(--primary-dark); }
+.btn-sm { padding:10px 16px; font-size:13.5px; border-radius:12px; width:auto; }
+.btn-hero { padding:20px 22px; border-radius:var(--radius-lg); font-size:16px; justify-content:space-between; margin-bottom:12px; }
+.btn-hero-count { background:rgba(255,255,255,.25); border-radius:999px; padding:3px 12px; font-size:14px; font-weight:800; }
+.btn-icon { background:transparent; border:none; width:38px; height:38px; border-radius:50%; font-size:17px;
+  color:var(--text); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; transition:background .15s; }
+.btn-icon:hover:not(:disabled) { background:rgba(0,0,0,.06); }
+.btn-icon:disabled { opacity:.35; cursor:not-allowed; }
+
+.card { background:var(--surface); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow-sm);
+  border:1px solid var(--border); margin-bottom:16px; }
+.section-title { font-size:14px; font-weight:700; color:var(--text-soft); margin-bottom:12px; }
+.input { width:100%; border:1px solid var(--border); background:var(--surface-2); padding:12px 14px;
+  border-radius:var(--radius-sm); font-family:inherit; font-size:15px; color:var(--text); outline:none;
+  margin-bottom:8px; transition:border-color .15s, background .15s; }
+.input:focus { border-color:var(--primary); background:#fff; }
+.input:disabled { opacity:.85; }
+.input.ltr { direction:ltr; text-align:left; font-family:"Georgia", serif; }
+.input.ok { border-color:var(--easy); background:var(--easy-soft); }
+.input.no { border-color:var(--hard); background:var(--hard-soft); }
+.input.revealed { border-color:var(--primary); background:var(--primary-soft); }
+
+.lists-nav { display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+.list-btn { display:flex; align-items:center; gap:12px; width:100%; padding:14px 16px; background:var(--surface);
+  border:1px solid var(--border); border-radius:var(--radius); cursor:pointer; font-family:inherit;
+  font-size:15px; color:var(--text); text-align:right; box-shadow:var(--shadow-sm); transition:transform .12s, border-color .15s; }
+.list-btn:hover { border-color:var(--primary); transform:translateY(-1px); }
+.list-icon { font-size:18px; }
+.list-text { flex:1; font-weight:600; }
+.list-count { background:var(--primary-soft); color:var(--primary-dark); border-radius:999px;
+  padding:2px 10px; font-size:13px; font-weight:700; min-width:30px; text-align:center; }
+
+/* Review */
+.review-topbar { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.review-progress { flex:1; display:flex; align-items:center; gap:10px; }
+.progress-track { flex:1; height:6px; background:var(--border); border-radius:999px; overflow:hidden; }
+.progress-fill { height:100%; width:0%; background:linear-gradient(90deg, var(--primary), var(--easy)); border-radius:999px; transition:width .35s ease; }
+#progressText { font-size:12.5px; color:var(--text-soft); font-weight:700; white-space:nowrap; }
+.star-btn { font-size:20px; }
+.star-btn.on { color:#f0a500; filter:drop-shadow(0 0 4px rgba(240,165,0,.35)); }
+
+.verb-title-bar { display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:16px;
+  padding:14px; background:var(--surface); border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-sm); border:1px solid var(--border); }
+.verb-lemma { font-family:"Georgia", serif; font-size:26px; font-weight:800; color:var(--primary-dark); }
+.reflexive-badge { background:#fff0e6; color:#a55a1a; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:700; }
+
+.practice-section { background:var(--surface); border-radius:var(--radius); padding:16px;
+  margin-bottom:14px; box-shadow:var(--shadow-sm); border:1px solid var(--border); }
+.section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; gap:8px; flex-wrap:wrap; }
+.section-title { font-size:14px; font-weight:800; color:var(--text); }
+.tense-badge { font-size:11.5px; font-weight:700; padding:3px 10px; border-radius:999px; letter-spacing:.2px;
+  font-family:"Georgia", serif; direction:ltr; }
+.tense-badge.presente { background:#e8efff; color:#2a4cb5; }
+.tense-badge.passato { background:#fbe8e2; color:#a94633; }
+.tense-badge.imperfetto { background:#fdf3e0; color:#a76b0f; }
+.tense-badge.futuro { background:#e6f5ee; color:#2c8159; }
+
+.arabic-meaning { font-size:22px; font-weight:800; color:var(--primary-dark); text-align:center;
+  padding:14px; background:var(--primary-soft); border-radius:var(--radius-sm); margin-bottom:14px; }
+.input-label { font-size:12.5px; font-weight:700; color:var(--text-soft); margin-bottom:6px; display:block; }
+
+.conj-grid { display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+.conj-row { display:grid; grid-template-columns:64px 1fr 28px; gap:8px; align-items:center; }
+.pronoun { font-family:"Georgia", serif; font-size:13.5px; color:var(--text-soft); font-weight:600; direction:ltr; }
+.conj-input { width:100%; border:1px solid var(--border); background:var(--surface-2); padding:9px 11px;
+  border-radius:10px; font-family:"Georgia", serif; font-size:14.5px; color:var(--text); outline:none;
+  direction:ltr; text-align:left; transition:border-color .15s, background .15s; }
+.conj-input:focus { border-color:var(--primary); background:#fff; }
+.conj-input.ok { border-color:var(--easy); background:var(--easy-soft); }
+.conj-input.no { border-color:var(--hard); background:var(--hard-soft); }
+.conj-input.revealed { border-color:var(--primary); background:var(--primary-soft); color:var(--primary-dark); }
+.check-mark { width:22px; text-align:center; font-size:14px; font-weight:800; }
+.check-mark.ok { color:var(--easy); }
+.check-mark.no { color:var(--hard); }
+.check-mark.revealed { color:var(--primary); }
+
+.row-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:6px; }
+.feedback { margin-top:10px; font-size:13.5px; font-weight:600; padding:8px 12px; border-radius:10px; min-height:20px; }
+.feedback:empty { display:none; }
+.feedback-ok { color:#2c8159; }
+.feedback-no { color:#a94633; }
+.feedback-revealed { color:var(--primary-dark); }
+
+.review-action-bar { position:sticky; bottom:0; background:var(--bg); padding:10px 0; z-index:5;
+  border-top:1px solid var(--border); margin-top:4px; }
+.rating-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:10px; margin-bottom:20px;
+  position:sticky; bottom:0; background:var(--bg); padding:10px 0; z-index:5; }
+.btn-rating { display:flex; flex-direction:column; align-items:center; gap:5px; padding:13px 6px; border:none;
+  border-radius:var(--radius); cursor:pointer; font-family:inherit; font-weight:700; font-size:12.5px;
+  transition:transform .12s, box-shadow .2s; box-shadow:var(--shadow-sm); }
+.btn-rating:active { transform:scale(.96); }
+.rating-emoji { font-size:20px; }
+.btn-hard { background:var(--hard-soft); color:#a94633; }
+.btn-medium { background:var(--medium-soft); color:#a76b0f; }
+.btn-easy { background:var(--easy-soft); color:#2c8159; }
+
+/* Add form */
+.field-label { display:block; font-size:12.5px; font-weight:700; color:var(--text-soft);
+  margin-bottom:4px; margin-top:10px; }
+.field-label:first-child { margin-top:0; }
+.checkbox-label { display:flex; align-items:center; gap:10px; padding:12px 4px; cursor:pointer;
+  font-size:14px; font-weight:600; color:var(--text); }
+.checkbox-label input[type="checkbox"] { width:20px; height:20px; accent-color:var(--primary); cursor:pointer; }
+
+.tense-editor { border:1px solid var(--border); border-radius:var(--radius); margin-bottom:10px; overflow:hidden; }
+.tense-editor-header { display:flex; align-items:center; gap:10px; padding:12px 14px;
+  background:var(--surface-2); cursor:pointer; font-weight:700; font-size:14px; }
+.tense-editor-header input[type="checkbox"] { width:18px; height:18px; accent-color:var(--primary); cursor:pointer; }
+.tense-editor-label { flex:1; }
+.required-badge { background:var(--primary-soft); color:var(--primary-dark);
+  font-size:11px; padding:2px 8px; border-radius:999px; font-weight:700; }
+.tense-editor-body { padding:12px 14px; display:flex; flex-direction:column; gap:8px; }
+.tense-editor:not(.enabled) .tense-editor-body { display:none; }
+.conj-edit-row { display:grid; grid-template-columns:64px 1fr; gap:8px; align-items:center; }
+.conj-edit-row .pronoun { font-size:13px; }
+.conj-edit-row .input { margin:0; padding:9px 11px; font-size:14px; }
+
+.list-header { display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+.list-header h2 { font-size:18px; font-weight:800; }
+.list-content { display:flex; flex-direction:column; gap:10px; }
+.list-item { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:14px; box-shadow:var(--shadow-sm); }
+.list-item-it { direction:ltr; text-align:left; font-family:"Georgia", serif; font-size:16px;
+  font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:8px; justify-content:space-between; }
+.list-item-ar { font-size:14.5px; color:var(--text-soft); margin-bottom:8px; }
+.list-item-meta { display:flex; flex-wrap:wrap; gap:6px; font-size:11.5px; color:var(--text-soft); margin-bottom:10px; }
+.badge { background:var(--surface-2); border:1px solid var(--border); padding:2px 8px; border-radius:999px; }
+.badge.easy { background:var(--easy-soft); color:#2c8159; border-color:transparent; }
+.badge.medium { background:var(--medium-soft); color:#a76b0f; border-color:transparent; }
+.badge.hard { background:var(--hard-soft); color:#a94633; border-color:transparent; }
+.badge.frozen { background:#e8f1f8; color:#3a6a92; border-color:transparent; }
+.badge.starred { background:#fff5d6; color:#a77a00; border-color:transparent; }
+.badge.reflexive { background:#fff0e6; color:#a55a1a; border-color:transparent; font-size:11px; font-weight:700; }
+.list-item-actions { display:flex; gap:6px; flex-wrap:wrap; }
+.mini-btn { border:none; border-radius:10px; padding:7px 10px; font-family:inherit; font-size:12.5px;
+  font-weight:700; cursor:pointer; background:var(--surface-2); color:var(--text); border:1px solid var(--border); }
+.mini-btn.ok { background:var(--easy-soft); color:#2c8159; border-color:transparent; }
+.mini-btn.no { background:var(--hard-soft); color:#a94633; border-color:transparent; }
+.mini-btn.freeze { background:#e8f1f8; color:#3a6a92; border-color:transparent; }
+.mini-btn.danger { background:#fbe8e2; color:#a94633; border-color:transparent; }
+.mini-btn.star-on { background:#fff5d6; color:#a77a00; border-color:transparent; }
+.mini-btn.edit { background:#eef3ff; color:#3a5ba8; border-color:transparent; }
+.empty-state { text-align:center; color:var(--text-soft); padding:40px 12px; font-size:14px; }
+.empty-state .em { font-size:40px; display:block; margin-bottom:10px; }
+
+#view-summary { text-align:center; padding-top:20px; }
+.summary-emoji { font-size:64px; margin-bottom:8px; animation:pop .5s ease; }
+@keyframes pop { 0%{transform:scale(0);} 60%{transform:scale(1.15);} 100%{transform:scale(1);} }
+.summary-title { font-size:24px; font-weight:800; color:var(--primary-dark); margin-bottom:4px; }
+.summary-sub { color:var(--text-soft); margin-bottom:22px; }
+.summary-stats { background:var(--surface); border-radius:var(--radius); padding:18px; margin-bottom:22px;
+  box-shadow:var(--shadow-sm); border:1px solid var(--border); display:grid; grid-template-columns:1fr 1fr; gap:14px 8px; }
+.summary-item { display:flex; flex-direction:column; gap:2px; }
+.summary-item .v { font-size:22px; font-weight:800; }
+.summary-item .l { font-size:12px; color:var(--text-soft); }
+.summary-item.easy .v { color:var(--easy); }
+.summary-item.medium .v { color:var(--medium); }
+.summary-item.hard .v { color:var(--hard); }
+.summary-item.skip .v { color:var(--skip); }
+.summary-item.total .v { color:var(--primary-dark); }
+
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:#23302c; color:#fff; padding:10px 18px; border-radius:999px; font-size:13.5px; font-weight:600;
+  z-index:200; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s;
+  max-width:88vw; text-align:center; }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+.toast.ok { background:var(--easy); }
+.toast.err { background:var(--hard); }
+.toast.warn { background:var(--medium); color:#3a2c05; }
+</style>
+</head>
+<body>
+
+<div id="bootScreen" class="boot-screen">
+  <div class="boot-logo"><span class="brand-dot"></span><h1>Imparo Verbi</h1></div>
+  <div class="boot-spinner"></div>
+  <p class="boot-text" id="bootText">جاري التحميل…</p>
+</div>
+
+<div id="errorScreen" class="error-screen" hidden>
+  <div class="error-icon">⚠️</div>
+  <h2>تعذّر تشغيل التطبيق</h2>
+  <p id="errorMessage"></p>
+  <button class="btn btn-primary" onclick="location.reload()">إعادة المحاولة</button>
+</div>
+
+<div class="app" id="appRoot" hidden>
+
+  <header class="app-header">
+    <div class="brand"><span class="brand-dot"></span><h1>Imparo Verbi</h1></div>
+    <div class="header-meta">
+      <span class="sync-dot" id="syncDot"></span>
+      <div class="streak-badge"><span>🔥</span><span id="streakValue">0</span></div>
+    </div>
+  </header>
+
+  <main class="app-main">
+
+    <section id="view-dashboard" class="view is-active">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-value" id="statDue">0</div><div class="stat-label">مستحقة اليوم</div></div>
+        <div class="stat-card"><div class="stat-value" id="statReviewed">0</div><div class="stat-label">راجعتها اليوم</div></div>
+        <div class="stat-card"><div class="stat-value" id="statMistakes">0</div><div class="stat-label">صعبة</div></div>
+        <div class="stat-card"><div class="stat-value" id="statFrozen">0</div><div class="stat-label">مجمّدة</div></div>
+      </div>
+
+      <button class="btn btn-primary btn-hero" id="btnStartReview">
+        <span>ابدأ مراجعة الأفعال</span>
+        <span class="btn-hero-count" id="heroCount">0</span>
+      </button>
+
+      <button class="btn btn-secondary" id="btnAddVerb" style="margin-bottom:16px;">➕ إضافة فعل جديد</button>
+
+      <div class="lists-nav">
+        <button class="list-btn" data-list="today"><span class="list-icon">📅</span><span class="list-text">المراجعة اليومية</span><span class="list-count" id="navTodayCount">0</span></button>
+        <button class="list-btn" data-list="mistakes"><span class="list-icon">⚠️</span><span class="list-text">الأفعال الصعبة</span><span class="list-count" id="navMistakesCount">0</span></button>
+        <button class="list-btn" data-list="frozen"><span class="list-icon">❄️</span><span class="list-text">المجمّدة</span><span class="list-count" id="navFrozenCount">0</span></button>
+        <button class="list-btn" data-list="all"><span class="list-icon">📚</span><span class="list-text">كل الأفعال</span><span class="list-count" id="navAllCount">0</span></button>
+      </div>
+    </section>
+
+    <section id="view-review" class="view">
+      <div class="review-topbar">
+        <button class="btn-icon" id="btnExitReview" title="خروج">✕</button>
+        <div class="review-progress">
+          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          <span id="progressText">0/0</span>
+        </div>
+        <button class="btn-icon star-btn" id="btnStarCurrent" title="تمييز">☆</button>
+        <button class="btn-icon" id="btnSkipHeader" title="تخطي">⏭️</button>
+      </div>
+
+      <div class="verb-title-bar">
+        <span class="verb-lemma" id="verbItalian" dir="ltr">—</span>
+        <span class="reflexive-badge" id="verbReflexiveBadge" hidden>منعكس</span>
+      </div>
+
+      <div class="practice-section" id="meaningSection">
+        <div class="section-header">
+          <span class="section-title">💡 المعنى</span>
+        </div>
+        <div class="arabic-meaning" id="arabicMeaning">—</div>
+        <label class="input-label">اكتب الفعل بالإيطالية:</label>
+        <input type="text" class="input ltr" id="meaningInput" dir="ltr" autocomplete="off" autocapitalize="off" spellcheck="false" />
+        <div class="row-actions">
+          <button class="btn btn-secondary btn-sm" id="btnCheckMeaning">تحقق</button>
+        </div>
+        <div class="feedback" id="meaningFeedback"></div>
+      </div>
+
+      <div id="conjugationSections"></div>
+
+      <div class="review-action-bar">
+        <button class="btn btn-secondary" id="btnRevealNext">👁 أظهر الفعل</button>
+      </div>
+
+      <div class="rating-row" id="ratingRow">
+        <button class="btn-rating btn-hard" data-rating="hard"><span class="rating-emoji">😰</span><span class="rating-label">صعب</span></button>
+        <button class="btn-rating btn-medium" data-rating="medium"><span class="rating-emoji">🙂</span><span class="rating-label">متوسط</span></button>
+        <button class="btn-rating btn-easy" data-rating="easy"><span class="rating-emoji">😎</span><span class="rating-label">سهل</span></button>
+      </div>
+    </section>
+
+    <section id="view-add" class="view">
+      <div class="list-header">
+        <button class="btn-icon" id="btnBackAdd">←</button>
+        <h2 id="addTitle">إضافة فعل جديد</h2>
+      </div>
+
+      <div class="card">
+        <label class="field-label">الفعل بالإيطالية *</label>
+        <input type="text" class="input ltr" id="addInfinitive" dir="ltr" placeholder="parlare" autocomplete="off" autocapitalize="off" spellcheck="false" />
+
+        <label class="field-label">المعنى بالعربية *</label>
+        <input type="text" class="input" id="addMeaning" placeholder="يتكلم" autocomplete="off" />
+
+        <label class="checkbox-label">
+          <input type="checkbox" id="addReflexive" />
+          <span>فعل انعكاسي (riflessivo)</span>
+        </label>
+      </div>
+
+      <div class="card">
+        <div class="section-title">الأزمنة والتصريفات</div>
+        <div id="tenseEditors"></div>
+      </div>
+
+      <button class="btn btn-primary" id="btnSaveVerb" style="margin-bottom:30px;">💾 حفظ الفعل</button>
+    </section>
+
+    <section id="view-list" class="view">
+      <div class="list-header">
+        <button class="btn-icon" id="btnBackList">←</button>
+        <h2 id="listTitle">القائمة</h2>
+      </div>
+      <div class="list-content" id="listContent"></div>
+    </section>
+
+    <section id="view-summary" class="view">
+      <div class="summary-emoji">🎉</div>
+      <h2 class="summary-title">أحسنت!</h2>
+      <p class="summary-sub" id="summarySub">أكملت مراجعة الأفعال</p>
+      <div class="summary-stats" id="summaryStats"></div>
+      <button class="btn btn-primary" id="btnBackHome">العودة للرئيسية</button>
+    </section>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  // =========================================================
+  // CONFIG
+  // =========================================================
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyA0Ca2fqu7Pw80sKhXVuqaz5h3UIaau_LQ",
+    authDomain: "imparo-53eea.firebaseapp.com",
+    projectId: "imparo-53eea",
+    storageBucket: "imparo-53eea.firebasestorage.app",
+    messagingSenderId: "558351996816",
+    appId: "1:558351996816:web:6698c08e636482e2908515"
+  };
+  // ⭐ مستقل تمامًا — USER_ID مختلف عن التطبيق الأصلي
+  const USER_ID = "ahmed_imparo_53eea_x7k9m2p4q8w3_admin_verbi";
+  const COLLECTION = "verbs";
+
+  // =========================================================
+  // TENSES
+  // =========================================================
+  const TENSE_ORDER = ['presente', 'passato_prossimo', 'imperfetto', 'futuro'];
+  const TENSES = {
+    presente:         { label: 'المضارع',         nameIt: 'presente',         required: true,  cls: 'presente' },
+    passato_prossimo: { label: 'الماضي القريب',    nameIt: 'passato prossimo', required: false, cls: 'passato' },
+    imperfetto:       { label: 'الماضي المستمر',   nameIt: 'imperfetto',       required: false, cls: 'imperfetto' },
+    futuro:           { label: 'المستقبل',         nameIt: 'futuro semplice',  required: false, cls: 'futuro' }
+  };
+  const PRONOUNS = ['io', 'tu', 'lui', 'noi', 'voi', 'loro'];
+  const PRONOUN_LABELS = { io: 'io', tu: 'tu', lui: 'lui/lei', noi: 'noi', voi: 'voi', loro: 'loro' };
+
+  // =========================================================
+  // SRS (نسخة مطابقة للأصل — لم تُمسّ)
+  // =========================================================
+  const SRS = (function () {
+    const REVIEW_HOUR = 10;
+    const EASY_STREAK_MAX = 4, EASY_DAYS = 7, EASY_LONG_DAYS = 30;
+    const MEDIUM_DAYS = 2, MEDIUM_STREAK_MAX = 4;
+
+    function startOfReviewDay(now = new Date()) {
+      const d = new Date(now);
+      if (d.getHours() < REVIEW_HOUR) d.setDate(d.getDate() - 1);
+      d.setHours(0, 0, 0, 0); return d;
+    }
+    function reviewDayKey(now = new Date()) {
+      const d = startOfReviewDay(now);
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+    function scheduleIn(daysAhead, now = new Date()) {
+      const d = new Date(now); d.setDate(d.getDate() + daysAhead); d.setHours(REVIEW_HOUR, 0, 0, 0); return d.getTime();
+    }
+    function isDue(s, now = Date.now()) {
+      if (!s) return false;
+      if (s.is_frozen) return false;
+      if (s.in_mistake_bank) return false;
+      return (s.next_review || 0) <= now;
+    }
+    function applyEasy(s, now = new Date()) {
+      const streak = (s.easy_streak || 0) + 1;
+      const days = streak > EASY_STREAK_MAX ? EASY_LONG_DAYS : EASY_DAYS;
+      return { next_review: scheduleIn(days, now), easy_streak: streak, medium_streak: 0, in_mistake_bank: false, last_reviewed: now.getTime() };
+    }
+    function applyMedium(s, now = new Date()) {
+      const m = Math.min((s.medium_streak || 0) + 1, MEDIUM_STREAK_MAX);
+      return { next_review: scheduleIn(MEDIUM_DAYS, now), medium_streak: m, easy_streak: 0, in_mistake_bank: false, last_reviewed: now.getTime() };
+    }
+    function applyHard(s, now = new Date()) {
+      return { next_review: scheduleIn(1, now), easy_streak: 0, medium_streak: 0, in_mistake_bank: true, last_reviewed: now.getTime() };
+    }
+    function applyCorrectFromMistakes(s, now = new Date()) {
+      return { next_review: scheduleIn(1, now), in_mistake_bank: false, easy_streak: 0, medium_streak: 0, last_reviewed: now.getTime() };
+    }
+    function applyWrongFromMistakes(s, now = new Date()) {
+      return { next_review: scheduleIn(1, now), easy_streak: 0, medium_streak: 0, in_mistake_bank: true, last_reviewed: now.getTime() };
+    }
+    return { reviewDayKey, isDue, applyEasy, applyMedium, applyHard, applyCorrectFromMistakes, applyWrongFromMistakes };
+  })();
+
+  // =========================================================
+  // SPEECH
+  // =========================================================
+  const Speech = (function () {
+    const supported = 'speechSynthesis' in window;
+    let voices = [], ready = false, fallbackHandler = null, warned = false, cached = null;
+    function load() {
+      if (!supported) return;
+      try { voices = window.speechSynthesis.getVoices() || []; ready = voices.length > 0; } catch(_) {}
+    }
+    if (supported) {
+      load();
+      window.speechSynthesis.onvoiceschanged = () => { load(); cached = null; };
+      setTimeout(load, 300); setTimeout(load, 1200);
+    }
+    function pick() {
+      if (cached) return cached;
+      if (!ready) load();
+      let v = voices.find(x => (x.lang || '').replace('_','-').toLowerCase() === 'it-it');
+      if (v) return (cached = { voice: v });
+      v = voices.find(x => /^it([-_]|$)/i.test(x.lang || ''));
+      if (v) return (cached = { voice: v });
+      v = voices.find(x => /ital/i.test(x.name || ''));
+      if (v) return (cached = { voice: v });
+      return (cached = { voice: null });
+    }
+    function speak(text) {
+      if (!text || !text.trim()) return;
+      if (!supported) { notify('هذا المتصفح لا يدعم النطق.'); return; }
+      try {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        const p = pick();
+        if (p.voice) { u.voice = p.voice; u.lang = p.voice.lang || 'it-IT'; }
+        else { u.lang = 'it-IT'; if (!warned) { warned = true; notify('لا يتوفر صوت إيطالي — سيُستخدم الصوت الافتراضي.'); } }
+        u.rate = 0.9; u.pitch = 1; u.volume = 1;
+        u.onerror = (e) => console.warn('[Speech]', e.error || e);
+        window.speechSynthesis.speak(u);
+      } catch (err) { console.warn(err); notify('تعذّر النطق.'); }
+    }
+    function notify(m) { if (typeof fallbackHandler === 'function') { try { fallbackHandler(m); } catch(_){} } }
+    function setFallbackHandler(fn) { fallbackHandler = fn; }
+    function cancel() { if (supported) { try { window.speechSynthesis.cancel(); } catch(_){} } }
+    return { speak, setFallbackHandler, cancel };
+  })();
+
+  // =========================================================
+  // STORE
+  // =========================================================
+  const Store = (function () {
+    let db = null, uid = null, ready = false;
+    function ensure() { if (!ready) throw new Error('Store غير مهيأ.'); }
+    async function init(onStatus) {
+      if (!window.firebase) throw new Error('Firebase غير محمّل.');
+      if (onStatus) onStatus('جارٍ الاتصال بقاعدة البيانات…');
+      if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+      db = firebase.firestore();
+      uid = USER_ID;
+      ready = true;
+      try { await db.enablePersistence({ synchronizeTabs: true }); } catch(_) {}
+      try { await db.collection('users').doc(uid).get(); }
+      catch (err) { throw new Error('فشل الوصول للقاعدة [' + (err.code || 'unknown') + ']'); }
+      return uid;
+    }
+    function userRef() { ensure(); return db.collection('users').doc(uid); }
+    function verbsCol() { ensure(); return userRef().collection(COLLECTION); }
+    const defaultUser = () => ({ streak: 0, last_review_day: null, reviewed_today: 0, reviewed_day_key: null, created_at: Date.now(), updated_at: Date.now() });
+    async function loadUser() {
+      ensure();
+      const ref = userRef(); const snap = await ref.get();
+      if (!snap.exists) { const d = defaultUser(); await ref.set(d, { merge: true }); return d; }
+      return Object.assign(defaultUser(), snap.data());
+    }
+    async function saveUser(patch) { ensure(); await userRef().set(Object.assign({}, patch, { updated_at: Date.now() }), { merge: true }); }
+    async function loadVerbs() { ensure(); const s = await verbsCol().get(); return s.docs.map(d => Object.assign({ id: d.id }, d.data())); }
+    async function addVerb(data) { ensure(); const r = await verbsCol().add(Object.assign({}, data)); return Object.assign({ id: r.id }, data); }
+    async function updateVerb(id, patch) { ensure(); await verbsCol().doc(id).set(patch, { merge: true }); }
+    async function deleteVerb(id) { ensure(); await verbsCol().doc(id).delete(); }
+    function getUid() { return uid; }
+    return { init, loadUser, saveUser, loadVerbs, addVerb, updateVerb, deleteVerb, getUid };
+  })();
+
+  // =========================================================
+  // STATE
+  // =========================================================
+  const state = {
+    user: null,
+    verbs: [],
+    verbsById: new Map(),
+    queue: [], initialQueue: [],
+    ratedCount: 0, skippedCount: 0,
+    skipCounts: new Map(),
+    session: { easy: 0, medium: 0, hard: 0 },
+    listMode: null, busy: false,
+    // review transient
+    revealStage: 0,
+    meaningChecked: false,
+    tenseChecks: {}
+  };
+
+  // =========================================================
+  // HELPERS
+  // =========================================================
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+  const escapeHtml = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+  function normalizeText(s) {
+    return String(s || '').trim().toLowerCase()
+      .replace(/\s+/g, ' ')
+      .replace(/[àáâ]/g,'a').replace(/[èéê]/g,'e')
+      .replace(/[ìíî]/g,'i').replace(/[òóô]/g,'o')
+      .replace(/[ùúû]/g,'u');
+  }
+
+  let toastTimer = null;
+  function toast(msg, type = 'info') {
+    const el = $('#toast'); if (!el) return;
+    el.textContent = msg;
+    el.className = 'toast show' + (type === 'ok' ? ' ok' : type === 'err' ? ' err' : type === 'warn' ? ' warn' : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+  }
+  function setSync(s) { const d = $('#syncDot'); if (d) d.className = 'sync-dot ' + (s || ''); }
+  function showView(n) {
+    $$('.view').forEach(v => v.classList.remove('is-active'));
+    const el = document.getElementById('view-' + n);
+    if (el) el.classList.add('is-active');
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+
+  function resetDailyCounterIfNeeded() {
+    const k = SRS.reviewDayKey();
+    if (state.user.reviewed_day_key !== k) { state.user.reviewed_day_key = k; state.user.reviewed_today = 0; }
+  }
+  function bumpStreakIfFirstReviewOfDay() {
+    const k = SRS.reviewDayKey();
+    if (state.user.last_review_day === k) return;
+    if (state.user.last_review_day) {
+      const y = new Date(); y.setDate(y.getDate() - 1);
+      state.user.streak = state.user.last_review_day === SRS.reviewDayKey(y) ? (state.user.streak || 0) + 1 : 1;
+    } else { state.user.streak = 1; }
+    state.user.last_review_day = k;
+  }
+
+  // =========================================================
+  // DASHBOARD
+  // =========================================================
+  const dueToday = () => state.verbs.filter(v => SRS.isDue(v));
+  const mistakesList = () => state.verbs.filter(v => v.in_mistake_bank && !v.is_frozen);
+  const frozenList = () => state.verbs.filter(v => v.is_frozen);
+
+  function renderDashboard() {
+    resetDailyCounterIfNeeded();
+    const due = dueToday().length, mistakes = mistakesList().length, frozen = frozenList().length;
+    const total = state.verbs.length;
+    $('#statDue').textContent = due;
+    $('#statReviewed').textContent = state.user.reviewed_today || 0;
+    $('#statMistakes').textContent = mistakes;
+    $('#statFrozen').textContent = frozen;
+    $('#heroCount').textContent = due;
+    $('#navTodayCount').textContent = due;
+    $('#navMistakesCount').textContent = mistakes;
+    $('#navFrozenCount').textContent = frozen;
+    $('#navAllCount').textContent = total;
+    $('#streakValue').textContent = state.user.streak || 0;
+    $('#btnStartReview').disabled = due === 0;
+  }
+
+  // =========================================================
+  // REVIEW FLOW
+  // =========================================================
+  function startReview() {
+    const q = dueToday();
+    if (q.length === 0) { toast('لا توجد أفعال مستحقة'); return; }
+    state.queue = q;
+    state.initialQueue = q.slice();
+    state.ratedCount = 0;
+    state.skippedCount = 0;
+    state.skipCounts = new Map();
+    state.session = { easy: 0, medium: 0, hard: 0 };
+    state.busy = false;
+    showView('review');
+    renderReviewCard();
+  }
+
+  function renderReviewCard() {
+    const v = state.queue[0];
+    if (!v) { finishReview(); return; }
+
+    state.revealStage = 0;
+    state.meaningChecked = false;
+    state.tenseChecks = {};
+
+    $('#verbItalian').textContent = v.infinitive || '—';
+    $('#verbReflexiveBadge').hidden = !v.is_reflexive;
+    $('#arabicMeaning').textContent = v.meaning_ar || '—';
+
+    const mi = $('#meaningInput');
+    mi.value = ''; mi.disabled = false; mi.className = 'input ltr';
+    $('#meaningFeedback').innerHTML = '';
+    $('#btnCheckMeaning').disabled = false;
+
+    const container = $('#conjugationSections');
+    container.innerHTML = '';
+    const enabled = TENSE_ORDER.filter(t => v.tenses && v.tenses[t]);
+    enabled.forEach(t => {
+      const sec = buildConjSection(t, v.tenses[t]);
+      container.appendChild(sec);
+      state.tenseChecks[t] = { checked: false, allCorrect: false };
+    });
+
+    updateProgress(); updateStarButton(); updateSkipButton(); updateRevealButton();
+
+    Speech.speak(v.infinitive);
+  }
+
+  function buildConjSection(tenseKey, forms) {
+    const t = TENSES[tenseKey];
+    const sec = document.createElement('div');
+    sec.className = 'practice-section conjugation-section';
+    sec.dataset.tense = tenseKey;
+
+    const rows = PRONOUNS.map(p => `
+      <div class="conj-row" data-pronoun="${p}">
+        <span class="pronoun">${PRONOUN_LABELS[p]}</span>
+        <input type="text" class="conj-input" data-pronoun="${p}" dir="ltr" autocomplete="off" autocapitalize="off" spellcheck="false" />
+        <span class="check-mark"></span>
+      </div>`).join('');
+
+    sec.innerHTML = `
+      <div class="section-header">
+        <span class="section-title">${t.label}</span>
+        <span class="tense-badge ${t.cls}">${t.nameIt}</span>
+      </div>
+      <div class="conj-grid">${rows}</div>
+      <div class="row-actions">
+        <button class="btn btn-secondary btn-sm btn-check-tense">تحقق</button>
+      </div>`;
+
+    sec.querySelector('.btn-check-tense').addEventListener('click', () => checkTense(sec, tenseKey, forms));
+    return sec;
+  }
+
+  function checkTense(sec, tenseKey, forms) {
+    const rows = sec.querySelectorAll('.conj-row');
+    let allCorrect = true;
+    rows.forEach(row => {
+      const p = row.dataset.pronoun;
+      const input = row.querySelector('.conj-input');
+      const mark = row.querySelector('.check-mark');
+      const expected = normalizeText(forms[p] || '');
+      const actual = normalizeText(input.value);
+      if (actual !== '' && actual === expected) {
+        mark.textContent = '✓'; mark.className = 'check-mark ok';
+        input.className = 'conj-input ok';
+      } else {
+        mark.textContent = '✗'; mark.className = 'check-mark no';
+        input.className = 'conj-input no';
+        allCorrect = false;
+      }
+    });
+    state.tenseChecks[tenseKey] = { checked: true, allCorrect };
+    toast(allCorrect ? '✓ كل التصريفات صحيحة' : '✗ توجد أخطاء — راجع الإجابات', allCorrect ? 'ok' : 'warn');
+  }
+
+  function checkMeaning() {
+    const v = state.queue[0]; if (!v) return;
+    const expected = normalizeText(v.infinitive);
+    const actual = normalizeText($('#meaningInput').value);
+    const correct = actual !== '' && actual === expected;
+    state.meaningChecked = true;
+
+    const mi = $('#meaningInput');
+    mi.disabled = true;
+    mi.className = 'input ltr ' + (correct ? 'ok' : 'no');
+    const fb = $('#meaningFeedback');
+    if (correct) fb.innerHTML = '<span class="feedback-ok">✓ صحيح</span>';
+    else fb.innerHTML = `<span class="feedback-no">✗ خطأ — الصواب: <strong dir="ltr">${escapeHtml(v.infinitive)}</strong></span>`;
+    $('#btnCheckMeaning').disabled = true;
+    updateRevealButton();
+  }
+
+  function revealNext() {
+    const v = state.queue[0]; if (!v) return;
+
+    if (state.revealStage === 0) {
+      const mi = $('#meaningInput');
+      mi.value = v.infinitive || '';
+      mi.disabled = true;
+      mi.className = 'input ltr revealed';
+      $('#meaningFeedback').innerHTML = '<span class="feedback-revealed">👁 تم إظهار الفعل</span>';
+      $('#btnCheckMeaning').disabled = true;
+      state.meaningChecked = true;
+      state.revealStage = 1;
+      Speech.speak(v.infinitive);
+    } else {
+      const enabled = TENSE_ORDER.filter(t => v.tenses && v.tenses[t]);
+      const idx = state.revealStage - 1;
+      if (idx >= enabled.length) return;
+      const key = enabled[idx];
+      const sec = document.querySelector(`.conjugation-section[data-tense="${key}"]`);
+      if (sec) {
+        const forms = v.tenses[key];
+        sec.querySelectorAll('.conj-row').forEach(row => {
+          const p = row.dataset.pronoun;
+          const input = row.querySelector('.conj-input');
+          const mark = row.querySelector('.check-mark');
+          input.value = forms[p] || '';
+          input.disabled = true;
+          input.className = 'conj-input revealed';
+          mark.textContent = '👁'; mark.className = 'check-mark revealed';
+        });
+        state.tenseChecks[key] = { checked: true, allCorrect: false, revealed: true };
+      }
+      state.revealStage++;
+      toast(`تم إظهار ${TENSES[key].label}`);
+      // speak first form of tense
+      const first = forms.io || forms[PRONOUNS[0]];
+      if (first) Speech.speak(first);
+    }
+    updateRevealButton();
+  }
+
+  function updateRevealButton() {
+    const v = state.queue[0];
+    const btn = $('#btnRevealNext');
+    if (!v || !btn) return;
+    const enabled = TENSE_ORDER.filter(t => v.tenses && v.tenses[t]);
+    btn.disabled = false;
+    if (state.revealStage === 0) {
+      btn.textContent = state.meaningChecked ? '👁 أظهر الفعل' : '👁 أظهر الفعل';
+    } else if (state.revealStage - 1 < enabled.length) {
+      const next = enabled[state.revealStage - 1];
+      btn.textContent = `👁 أظهر ${TENSES[next].label}`;
+    } else {
+      btn.textContent = '✓ ظهر كل شيء';
+      btn.disabled = true;
+    }
+  }
+
+  function skipCard() {
+    const v = state.queue[0]; if (!v) return;
+    if (state.queue.length <= 1) { toast('هذه آخر بطاقة — قيّمها الآن', 'warn'); return; }
+    const cur = state.queue.shift();
+    state.queue.push(cur);
+    state.skippedCount++;
+    state.skipCounts.set(cur.id, (state.skipCounts.get(cur.id) || 0) + 1);
+    toast('⏭️ تم تأجيل الفعل');
+    renderReviewCard();
+  }
+
+  async function rateCard(rating) {
+    if (state.busy) return;
+    const v = state.queue[0]; if (!v) return;
+    state.busy = true;
+
+    let patch;
+    if (rating === 'easy') patch = SRS.applyEasy(v);
+    else if (rating === 'medium') patch = SRS.applyMedium(v);
+    else patch = SRS.applyHard(v);
+
+    Object.assign(v, patch);
+    state.session[rating] = (state.session[rating] || 0) + 1;
+
+    resetDailyCounterIfNeeded();
+    state.user.reviewed_today = (state.user.reviewed_today || 0) + 1;
+    bumpStreakIfFirstReviewOfDay();
+
+    setSync('syncing');
+    Promise.all([
+      Store.updateVerb(v.id, patch),
+      Store.saveUser({ streak: state.user.streak, last_review_day: state.user.last_review_day, reviewed_today: state.user.reviewed_today, reviewed_day_key: state.user.reviewed_day_key })
+    ]).then(() => setSync('online')).catch(err => { console.warn(err); setSync('offline'); });
+
+    state.queue.shift();
+    state.ratedCount++;
+
+    if (state.queue.length === 0) finishReview();
+    else renderReviewCard();
+
+    setTimeout(() => { state.busy = false; }, 250);
+  }
+
+  function updateProgress() {
+    const total = state.initialQueue.length;
+    const done = state.ratedCount;
+    $('#progressFill').style.width = (total ? (done / total * 100) : 0) + '%';
+    const sk = state.skippedCount ? ` · ⏭️ ${state.skippedCount}` : '';
+    $('#progressText').textContent = `✅ ${done}/${total}${sk}`;
+  }
+  function updateStarButton() {
+    const btn = $('#btnStarCurrent'); if (!btn) return;
+    const v = state.queue[0];
+    if (!v) { btn.textContent = '☆'; btn.classList.remove('on'); return; }
+    btn.textContent = v.is_starred ? '⭐' : '☆';
+    btn.classList.toggle('on', !!v.is_starred);
+  }
+  function updateSkipButton() {
+    const btn = $('#btnSkipHeader'); if (!btn) return;
+    btn.disabled = state.queue.length <= 1;
+  }
+
+  function finishReview() {
+    const total = state.initialQueue.length;
+    $('#summarySub').textContent = `أكملت مراجعة ${total} فعل`;
+    const { easy, medium, hard } = state.session;
+    $('#summaryStats').innerHTML = `
+      <div class="summary-item total"><span class="v">${total}</span><span class="l">إجمالي الأفعال</span></div>
+      <div class="summary-item total"><span class="v">🔥 ${state.user.streak || 0}</span><span class="l">السلسلة</span></div>
+      <div class="summary-item easy"><span class="v">${easy}</span><span class="l">سهل</span></div>
+      <div class="summary-item medium"><span class="v">${medium}</span><span class="l">متوسط</span></div>
+      <div class="summary-item hard"><span class="v">${hard}</span><span class="l">صعب</span></div>
+      ${state.skippedCount > 0 ? `<div class="summary-item skip"><span class="v">⏭️ ${state.skippedCount}</span><span class="l">مرات التخطي</span></div>` : ''}
+      <div class="summary-item total"><span class="v">${state.user.reviewed_today || 0}</span><span class="l">راجعت اليوم</span></div>`;
+    showView('summary');
+    renderDashboard();
+  }
+
+  // =========================================================
+  // ADD / EDIT VERB
+  // =========================================================
+  let editingVerbId = null;
+
+  function renderTenseEditors(verb) {
+    const container = $('#tenseEditors');
+    container.innerHTML = '';
+    TENSE_ORDER.forEach(key => {
+      const t = TENSES[key];
+      const existing = verb && verb.tenses && verb.tenses[key];
+      const enabled = !!existing || t.required;
+
+      const el = document.createElement('div');
+      el.className = 'tense-editor' + (enabled ? ' enabled' : '');
+      el.dataset.tense = key;
+
+      const rows = PRONOUNS.map(p => {
+        const val = existing ? (existing[p] || '') : '';
+        return `<div class="conj-edit-row">
+          <span class="pronoun">${PRONOUN_LABELS[p]}</span>
+          <input type="text" class="input ltr conj-edit-input" data-pronoun="${p}" dir="ltr"
+            value="${escapeHtml(val)}" autocomplete="off" autocapitalize="off" spellcheck="false" />
+        </div>`;
+      }).join('');
+
+      el.innerHTML = `
+        <label class="tense-editor-header">
+          <input type="checkbox" class="tense-toggle" ${enabled ? 'checked' : ''} ${t.required ? 'disabled' : ''} />
+          <span class="tense-editor-label">${t.label}</span>
+          ${t.required ? '<span class="required-badge">مطلوب</span>' : ''}
+          <span class="tense-badge ${t.cls}">${t.nameIt}</span>
+        </label>
+        <div class="tense-editor-body" ${enabled ? '' : 'hidden'}>${rows}</div>`;
+
+      container.appendChild(el);
+    });
+
+    container.querySelectorAll('.tense-toggle').forEach(cb => {
+      cb.addEventListener('change', e => {
+        const ed = e.target.closest('.tense-editor');
+        const body = ed.querySelector('.tense-editor-body');
+        if (e.target.checked) { ed.classList.add('enabled'); body.hidden = false; }
+        else { ed.classList.remove('enabled'); body.hidden = true; }
+      });
+    });
+  }
+
+  function openAddVerbForm(verb = null) {
+    editingVerbId = verb ? verb.id : null;
+    $('#addTitle').textContent = verb ? 'تعديل الفعل' : 'إضافة فعل جديد';
+    $('#addInfinitive').value = verb ? (verb.infinitive || '') : '';
+    $('#addMeaning').value = verb ? (verb.meaning_ar || '') : '';
+    $('#addReflexive').checked = verb ? !!verb.is_reflexive : false;
+    renderTenseEditors(verb);
+    showView('add');
+  }
+
+  async function saveVerb() {
+    const infinitive = $('#addInfinitive').value.trim();
+    const meaning_ar = $('#addMeaning').value.trim();
+    const is_reflexive = $('#addReflexive').checked;
+    if (!infinitive || !meaning_ar) { toast('أكمل الفعل والمعنى', 'err'); return; }
+
+    const tenses = {};
+    for (const ed of $$('.tense-editor')) {
+      const key = ed.dataset.tense;
+      const toggle = ed.querySelector('.tense-toggle');
+      if (!toggle.checked) continue;
+      const forms = {};
+      let allFilled = true;
+      ed.querySelectorAll('.conj-edit-input').forEach(inp => {
+        const val = inp.value.trim();
+        forms[inp.dataset.pronoun] = val;
+        if (!val) allFilled = false;
+      });
+      if (!allFilled) { toast(`أكمل تصريفات ${TENSES[key].label}`, 'err'); return; }
+      tenses[key] = forms;
+    }
+    if (!tenses.presente) { toast('المضارع مطلوب', 'err'); return; }
+
+    const payload = { infinitive, meaning_ar, is_reflexive, tenses };
+
+    setSync('syncing');
+    $('#btnSaveVerb').disabled = true;
+    try {
+      if (editingVerbId) {
+        await Store.updateVerb(editingVerbId, payload);
+        const idx = state.verbs.findIndex(v => v.id === editingVerbId);
+        if (idx >= 0) { Object.assign(state.verbs[idx], payload); state.verbsById.set(editingVerbId, state.verbs[idx]); }
+        toast('تم تحديث الفعل ✓', 'ok');
+      } else {
+        const initial = Object.assign({
+          next_review: Date.now() - 1,
+          easy_streak: 0, medium_streak: 0,
+          in_mistake_bank: false, is_frozen: false, is_starred: false,
+          created_at: Date.now(), last_reviewed: null
+        }, payload);
+        const saved = await Store.addVerb(initial);
+        state.verbs.push(saved); state.verbsById.set(saved.id, saved);
+        toast('تمت إضافة الفعل ✓', 'ok');
+      }
+      setSync('online');
+      showView('dashboard');
+      renderDashboard();
+    } catch (err) {
+      console.error(err); setSync('offline'); toast('فشل الحفظ', 'err');
+    } finally {
+      $('#btnSaveVerb').disabled = false;
+    }
+  }
+
+  // =========================================================
+  // LISTS
+  // =========================================================
+  function openList(mode) {
+    state.listMode = mode;
+    const titles = { today: 'المراجعة اليومية', mistakes: 'الأفعال الصعبة', frozen: 'المجمّدة', all: 'كل الأفعال' };
+    $('#listTitle').textContent = titles[mode] || 'القائمة';
+    renderList(); showView('list');
+  }
+
+  function renderList() {
+    const mode = state.listMode, wrap = $('#listContent');
+    if (!mode) return;
+    let items = [];
+    if (mode === 'today') items = dueToday();
+    if (mode === 'mistakes') items = mistakesList();
+    if (mode === 'frozen') items = frozenList();
+    if (mode === 'all') items = state.verbs.slice();
+
+    if (items.length === 0) {
+      const msgs = { today: 'لا توجد أفعال مستحقة', mistakes: 'لا توجد أفعال صعبة 🎉', frozen: 'لا توجد أفعال مجمّدة', all: 'لم تُضف أي فعل بعد' };
+      wrap.innerHTML = `<div class="empty-state"><span class="em">📭</span>${msgs[mode] || ''}</div>`;
+      return;
+    }
+    if (mode === 'all') items.sort((a,b) => (b.created_at || 0) - (a.created_at || 0));
+    wrap.innerHTML = '';
+    items.forEach(v => wrap.appendChild(buildListItem(v, mode)));
+  }
+
+  function buildListItem(v, mode) {
+    const el = document.createElement('div');
+    el.className = 'list-item';
+    const tenseCount = Object.keys(v.tenses || {}).length;
+
+    el.innerHTML = `
+      <div class="list-item-it">
+        <span>${escapeHtml(v.infinitive)}</span>
+        ${v.is_reflexive ? '<span class="badge reflexive">منعكس</span>' : ''}
+      </div>
+      <div class="list-item-ar">${escapeHtml(v.meaning_ar)}</div>
+      <div class="list-item-meta">
+        ${v.is_starred ? '<span class="badge starred">⭐</span>' : ''}
+        ${v.is_frozen ? '<span class="badge frozen">❄️ مجمّد</span>' : ''}
+        ${v.in_mistake_bank ? '<span class="badge hard">⚠️ صعب</span>' : ''}
+        ${v.easy_streak ? `<span class="badge easy">سهل ×${v.easy_streak}</span>` : ''}
+        ${v.medium_streak ? `<span class="badge medium">متوسط ×${v.medium_streak}</span>` : ''}
+        <span class="badge">${tenseCount} أزمنة</span>
+        <span class="badge">${fmtDate(v.next_review)}</span>
+      </div>
+      <div class="list-item-actions"></div>`;
+
+    const acts = el.querySelector('.list-item-actions');
+    const mk = (label, cls, fn) => {
+      const b = document.createElement('button');
+      b.className = 'mini-btn ' + (cls || '');
+      b.textContent = label;
+      b.addEventListener('click', fn);
+      return b;
+    };
+
+    if (mode === 'mistakes') {
+      acts.appendChild(mk('✓ صح','ok',() => markCorrect(v.id)));
+      acts.appendChild(mk('✗ خطأ','no',() => markWrong(v.id)));
+      acts.appendChild(mk('❄️ تجميد','freeze',() => freezeVerb(v.id)));
+    } else if (mode === 'frozen') {
+      acts.appendChild(mk('♻️ إلغاء','freeze',() => unfreezeVerb(v.id)));
+      acts.appendChild(mk('🗑️ حذف','danger',() => removeVerb(v.id)));
+    } else {
+      acts.appendChild(mk('❄️ تجميد','freeze',() => freezeVerb(v.id)));
+      acts.appendChild(mk('🗑️ حذف','danger',() => removeVerb(v.id)));
+    }
+    acts.appendChild(mk('🔊','',() => Speech.speak(v.infinitive)));
+    acts.appendChild(mk('✏️','edit',() => openAddVerbForm(v)));
+    acts.appendChild(mk(v.is_starred ? '⭐' : '☆', v.is_starred ? 'star-on' : '', () => toggleStar(v.id)));
+    return el;
+  }
+
+  function fmtDate(ts) {
+    if (!ts) return '—';
+    const d = new Date(ts);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const tgt = new Date(d); tgt.setHours(0,0,0,0);
+    const diff = Math.round((tgt - today) / 86400000);
+    if (diff === 0) return 'اليوم';
+    if (diff === -1) return 'أمس';
+    if (diff === 1) return 'غدًا';
+    if (diff > 1 && diff <= 7) return `بعد ${diff} أيام`;
+    if (diff < 0) return `متأخرة ${Math.abs(diff)} يوم`;
+    return `${d.getDate()}/${d.getMonth()+1}`;
+  }
+
+  async function updateAndRefresh(id, patch) {
+    const v = state.verbsById.get(id) || state.verbs.find(x => x.id === id);
+    if (!v) return;
+    Object.assign(v, patch);
+    setSync('syncing');
+    try { await Store.updateVerb(id, patch); setSync('online'); }
+    catch (err) { console.error(err); setSync('offline'); toast('تعذّر التحديث', 'err'); }
+    renderList(); renderDashboard();
+  }
+  async function markCorrect(id) {
+    const v = state.verbsById.get(id) || state.verbs.find(x => x.id === id);
+    if (!v) return;
+    toast('خرج من قائمة الصعبة ✓', 'ok');
+    await updateAndRefresh(id, SRS.applyCorrectFromMistakes(v));
+  }
+  async function markWrong(id) {
+    const v = state.verbsById.get(id) || state.verbs.find(x => x.id === id);
+    if (!v) return;
+    toast('سيبقى في القائمة الصعبة');
+    await updateAndRefresh(id, SRS.applyWrongFromMistakes(v));
+  }
+  async function freezeVerb(id) { await updateAndRefresh(id, { is_frozen: true }); toast('تم التجميد ❄️'); }
+  async function unfreezeVerb(id) { await updateAndRefresh(id, { is_frozen: false }); toast('تم إلغاء التجميد ♻️', 'ok'); }
+  async function removeVerb(id) {
+    if (!confirm('حذف الفعل نهائيًا؟')) return;
+    setSync('syncing');
+    try {
+      await Store.deleteVerb(id);
+      state.verbs = state.verbs.filter(x => x.id !== id);
+      state.verbsById.delete(id);
+      setSync('online'); toast('تم الحذف');
+    } catch (err) { console.error(err); setSync('offline'); toast('تعذّر الحذف', 'err'); }
+    renderList(); renderDashboard();
+  }
+  async function toggleStar(id) {
+    const v = state.verbsById.get(id) || state.verbs.find(x => x.id === id);
+    if (!v) return;
+    v.is_starred = !v.is_starred;
+    setSync('syncing');
+    try {
+      await Store.updateVerb(id, { is_starred: v.is_starred });
+      setSync('online');
+      toast(v.is_starred ? 'تم التمييز ⭐' : 'أُزيل التمييز', 'ok');
+    } catch (err) {
+      console.error(err); setSync('offline'); toast('تعذّر التحديث', 'err');
+      v.is_starred = !v.is_starred;
+    }
+    if (state.listMode) renderList();
+    renderDashboard();
+    if ($('#view-review').classList.contains('is-active')) updateStarButton();
+  }
+
+  // =========================================================
+  // EVENTS
+  // =========================================================
+  function bindEvents() {
+    $('#btnStartReview').addEventListener('click', startReview);
+    $('#btnAddVerb').addEventListener('click', () => openAddVerbForm());
+    $$('.list-btn').forEach(b => b.addEventListener('click', () => openList(b.dataset.list)));
+
+    $('#btnExitReview').addEventListener('click', () => {
+      if (confirm('إنهاء الجلسة؟ ما تم تقييمه محفوظ.')) { showView('dashboard'); renderDashboard(); }
+    });
+
+    $('#btnCheckMeaning').addEventListener('click', checkMeaning);
+    $('#meaningInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); checkMeaning(); } });
+    $('#btnRevealNext').addEventListener('click', revealNext);
+    $$('.btn-rating').forEach(b => b.addEventListener('click', () => rateCard(b.dataset.rating)));
+    $('#btnSkipHeader').addEventListener('click', skipCard);
+    $('#btnStarCurrent').addEventListener('click', () => {
+      const v = state.queue[0]; if (v) toggleStar(v.id);
+    });
+
+    $('#btnBackHome').addEventListener('click', () => { showView('dashboard'); renderDashboard(); });
+    $('#btnBackList').addEventListener('click', () => { showView('dashboard'); renderDashboard(); });
+    $('#btnBackAdd').addEventListener('click', () => { showView('dashboard'); renderDashboard(); });
+    $('#btnSaveVerb').addEventListener('click', saveVerb);
+
+    const updateOnline = () => setSync(navigator.onLine ? 'online' : 'offline');
+    window.addEventListener('online', updateOnline);
+    window.addEventListener('offline', updateOnline);
+    updateOnline();
+
+    window.addEventListener('beforeunload', () => Speech.cancel());
+  }
+
+  // =========================================================
+  // BOOT
+  // =========================================================
+  function showError(msg) {
+    console.error('[Imparo Verbi]', msg);
+    $('#bootScreen').hidden = true;
+    $('#errorScreen').hidden = false;
+    $('#errorMessage').textContent = msg || 'خطأ غير معروف';
+  }
+  function setBootText(m) { const el = $('#bootText'); if (el) el.textContent = m; }
+
+  async function boot() {
+    try {
+      await Store.init(setBootText);
+      Speech.setFallbackHandler(m => toast(m, 'warn'));
+      setBootText('جارٍ تحميل الأفعال…');
+      const [user, verbs] = await Promise.all([Store.loadUser(), Store.loadVerbs()]);
+      state.user = user;
+      state.verbs = verbs;
+      state.verbsById = new Map(verbs.map(v => [v.id, v]));
+      resetDailyCounterIfNeeded();
+      bindEvents();
+      renderDashboard();
+      $('#bootScreen').hidden = true;
+      $('#appRoot').hidden = false;
+      setSync('online');
+      console.info('[Imparo Verbi] جاهز. USER_ID =', Store.getUid(), '| أفعال:', verbs.length);
+    } catch (err) {
+      console.error('[Imparo Verbi] فشل التهيئة:', err);
+      showError(err && err.message ? err.message : 'خطأ غير معروف');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', boot);
+})();
+</script>
+</body>
+</html>
