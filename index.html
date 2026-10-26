@@ -107,6 +107,7 @@ body { min-height:100vh; }
   padding:14px; background:var(--surface); border-radius:var(--radius-lg);
   box-shadow:var(--shadow-sm); border:1px solid var(--border); }
 .verb-lemma { font-family:"Georgia", serif; font-size:26px; font-weight:800; color:var(--primary-dark); }
+.verb-lemma.is-hidden { color:#c7d3cf; letter-spacing:2px; font-size:22px; }
 .reflexive-badge { background:#fff0e6; color:#a55a1a; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:700; }
 .practice-section { background:var(--surface); border-radius:var(--radius); padding:16px;
   margin-bottom:14px; box-shadow:var(--shadow-sm); border:1px solid var(--border); }
@@ -171,6 +172,33 @@ body { min-height:100vh; }
 .conj-edit-row { display:grid; grid-template-columns:64px 1fr; gap:8px; align-items:center; }
 .conj-edit-row .pronoun { font-size:13px; }
 .conj-edit-row .input { margin:0; padding:9px 11px; font-size:14px; }
+
+/* ===== Single-form tense styles (passato_prossimo) ===== */
+.conj-single-hint { font-size:11.5px; color:var(--text-soft); text-align:center;
+  margin-bottom:8px; font-weight:600; font-style:italic; }
+.conj-row-single { grid-template-columns:1fr 28px !important; }
+.conj-single-input {
+  font-size:16px !important;
+  font-weight:700 !important;
+  text-align:center !important;
+  font-family:"Georgia", serif !important;
+}
+.conj-uniform-hint {
+  font-size:11.5px;
+  color:#a76b0f;
+  font-weight:700;
+  padding:7px 10px;
+  background:var(--medium-soft);
+  border-radius:8px;
+  border:1px solid #f1d9a3;
+  line-height:1.5;
+  margin-top:8px;
+}
+.one-word-badge {
+  font-size:10px; padding:2px 8px; border-radius:999px;
+  background:var(--primary-soft); color:var(--primary-dark); font-weight:700;
+}
+
 .list-header { display:flex; align-items:center; gap:8px; margin-bottom:14px; }
 .list-header h2 { font-size:18px; font-weight:800; }
 .list-content { display:flex; flex-direction:column; gap:10px; }
@@ -287,7 +315,7 @@ body { min-height:100vh; }
       </div>
 
       <div class="verb-title-bar">
-        <span class="verb-lemma" id="verbItalian" dir="ltr">—</span>
+        <span class="verb-lemma is-hidden" id="verbItalian" dir="ltr">•••</span>
         <span class="reflexive-badge" id="verbReflexiveBadge" hidden>منعكس</span>
       </div>
 
@@ -384,22 +412,17 @@ body { min-height:100vh; }
     appId:             "1:558351996816:web:6698c08e636482e2908515"
   };
   const EXPECTED_PROJECT = "imparo-53eea";
-  // ⭐ مسار مستقل تمامًا
   const USER_ID    = "ahmed_imparo_53eea_x7k9m2p4q8w3_admin_verbi";
   const COLLECTION = "verbs";
 
   /* =========================================================
-     MATCH — مطابقة الحروف الدقيقة (v2.5)
-     - التشكيل الإيطالي (à è ì ò ù é) إلزامي: "perche" ≠ "perché"
-     - تكبير الحرف الأول مسموح (Parlo = parlo) — لأن لوحة المفاتيح قد تكبّر تلقائيًا
-     - المسافات المتعددة والبادئة/اللاحقة تُقلَّص (تسامح مع أخطاء كتابية غير جوهرية فقط)
-     لرفض "Parlo" أيضًا: احذف السطر t = t.toLowerCase();
+     MATCH — مطابقة الحروف الدقيقة
      ========================================================= */
   function normalizeText(s) {
     let t = String(s || '').trim();
     t = t.replace(/\s+/g, ' ');
     t = t.toLowerCase();
-    return t;  // لا إزالة للتشكيل — التشكيل جزء من الكلمة
+    return t;
   }
 
   /* =========================================================
@@ -408,15 +431,22 @@ body { min-height:100vh; }
   const TENSE_ORDER = ['presente', 'passato_prossimo', 'imperfetto', 'futuro'];
   const TENSES = {
     presente:         { label: 'المضارع',       nameIt: 'presente',         required: true,  cls: 'presente' },
-    passato_prossimo: { label: 'الماضي القريب', nameIt: 'passato prossimo', required: false, cls: 'passato' },
+    passato_prossimo: { label: 'الماضي التام',   nameIt: 'passato prossimo', required: false, cls: 'passato', singleForm: true },
     imperfetto:       { label: 'الماضي المستمر', nameIt: 'imperfetto',       required: false, cls: 'imperfetto' },
     futuro:           { label: 'المستقبل',       nameIt: 'futuro semplice',  required: false, cls: 'futuro' }
   };
   const PRONOUNS = ['io', 'tu', 'lui', 'noi', 'voi', 'loro'];
   const PRONOUN_LABELS = { io: 'io', tu: 'tu', lui: 'lui/lei', noi: 'noi', voi: 'voi', loro: 'loro' };
 
+  // هل كل الضمائر لها نفس التصريف؟ (لزمن الماضي التام)
+  function isUniformForms(forms) {
+    if (!forms || typeof forms !== 'object') return false;
+    const vals = PRONOUNS.map(p => String(forms[p] || '').trim());
+    return !!vals[0] && vals.every(v => v === vals[0]);
+  }
+
   /* =========================================================
-     SRS — نسخة مطابقة للأصل
+     SRS
      ========================================================= */
   const SRS = (function () {
     const REVIEW_HOUR = 10;
@@ -508,12 +538,11 @@ body { min-height:100vh; }
   })();
 
   /* =========================================================
-     Store — مع تحقق صريح من المشروع والمسار
+     Store
      ========================================================= */
   const Store = (function () {
     let db = null, uid = null, ready = false, projectId = null;
     function ensure() { if (!ready) throw new Error('Store غير مهيأ.'); }
-
     function fullPath() { return `users/${uid}/${COLLECTION}`; }
 
     async function init(onStatus) {
@@ -525,16 +554,14 @@ body { min-height:100vh; }
       uid = USER_ID;
       projectId = firebase.app().options.projectId;
 
-      // ⭐ تحقق صريح من المشروع — يظهر في الـ console والتشخيص
       console.info(`[Firebase] projectId = ${projectId}`);
       console.info(`[Firebase] expected  = ${EXPECTED_PROJECT}`);
       console.info(`[Firebase] path      = ${fullPath()}`);
       if (projectId !== EXPECTED_PROJECT) {
-        console.warn(`[Firebase] ⚠️ تحذير: المشروع الفعلي (${projectId}) لا يطابق المتوقع (${EXPECTED_PROJECT})`);
+        console.warn(`[Firebase] ⚠️ المشروع الفعلي (${projectId}) لا يطابق المتوقع (${EXPECTED_PROJECT})`);
       }
 
       ready = true;
-
       try { await db.enablePersistence({ synchronizeTabs: true }); }
       catch (e) { console.warn('[Store] persistence:', e.code || e.message); }
 
@@ -588,7 +615,8 @@ body { min-height:100vh; }
     ratedCount: 0, skippedCount: 0, skipCounts: new Map(),
     session: { easy: 0, medium: 0, hard: 0 },
     listMode: null, busy: false,
-    revealStage: 0, meaningChecked: false, tenseChecks: {}
+    revealStage: 0, meaningChecked: false, tenseChecks: {},
+    verbRevealed: false
   };
 
   const $ = s => document.querySelector(s);
@@ -646,7 +674,7 @@ body { min-height:100vh; }
   }
 
   /* =========================================================
-     Review
+     Review — عرض الفعل مخفي في البداية حتى لا يُفشي الإجابة
      ========================================================= */
   function startReview() {
     const q = dueToday();
@@ -664,9 +692,15 @@ body { min-height:100vh; }
     const v = state.queue[0];
     if (!v) { finishReview(); return; }
     state.revealStage = 0; state.meaningChecked = false; state.tenseChecks = {};
+    state.verbRevealed = false;
 
-    $('#verbItalian').textContent = v.infinitive || '—';
-    $('#verbReflexiveBadge').hidden = !v.is_reflexive;
+    // ⭐ الفعل مخفي — نضع علامات بدلاً منه حتى يحاول المستخدم الترجمة من العربية
+    const titleEl = $('#verbItalian');
+    titleEl.textContent = '•••';
+    titleEl.classList.add('is-hidden');
+    // ⭐ شارة "منعكس" مخفية أيضاً — لأنها تلميح
+    $('#verbReflexiveBadge').hidden = true;
+
     $('#arabicMeaning').textContent = v.meaning_ar || '—';
 
     const mi = $('#meaningInput');
@@ -683,34 +717,87 @@ body { min-height:100vh; }
     });
 
     updateProgress(); updateStarButton(); updateSkipButton(); updateRevealButton();
-    Speech.speak(v.infinitive);
+    // ⭐ لا ننطق الفعل هنا — يجب أن يبقى مخفياً حتى يحاول المستخدم
+  }
+
+  // إظهار الفعل في العنوان + (اختياري) نطقه
+  function revealTitleVerb(v, speak) {
+    if (!v) return;
+    const titleEl = $('#verbItalian');
+    titleEl.textContent = v.infinitive || '—';
+    titleEl.classList.remove('is-hidden');
+    $('#verbReflexiveBadge').hidden = !v.is_reflexive;
+    state.verbRevealed = true;
+    if (speak) Speech.speak(v.infinitive);
   }
 
   function buildConjSection(tenseKey, forms) {
     const t = TENSES[tenseKey];
+    const single = t.singleForm && isUniformForms(forms);
+
     const sec = document.createElement('div');
     sec.className = 'practice-section conjugation-section';
     sec.dataset.tense = tenseKey;
-    const rows = PRONOUNS.map(p => `
-      <div class="conj-row" data-pronoun="${p}">
-        <span class="pronoun">${PRONOUN_LABELS[p]}</span>
-        <input type="text" class="conj-input" data-pronoun="${p}" dir="ltr" autocomplete="off" autocapitalize="off" spellcheck="false" autocorrect="off" />
-        <span class="check-mark"></span>
-      </div>`).join('');
+
+    let bodyHtml;
+    if (single) {
+      bodyHtml = `
+        <div class="conj-single-hint">(نفس الكلمة لكل الضمائر)</div>
+        <div class="conj-grid">
+          <div class="conj-row conj-row-single" data-pronoun="__single__">
+            <input type="text" class="conj-input" data-pronoun="__single__" dir="ltr"
+              autocomplete="off" autocapitalize="off" spellcheck="false" autocorrect="off"
+              placeholder="اكتب الكلمة…" />
+            <span class="check-mark"></span>
+          </div>
+        </div>`;
+    } else {
+      bodyHtml = `
+        <div class="conj-grid">
+          ${PRONOUNS.map(p => `
+            <div class="conj-row" data-pronoun="${p}">
+              <span class="pronoun">${PRONOUN_LABELS[p]}</span>
+              <input type="text" class="conj-input" data-pronoun="${p}" dir="ltr"
+                autocomplete="off" autocapitalize="off" spellcheck="false" autocorrect="off" />
+              <span class="check-mark"></span>
+            </div>`).join('')}
+        </div>`;
+    }
+
     sec.innerHTML = `
       <div class="section-header">
-        <span class="section-title">${t.label}</span>
+        <span class="section-title">${t.label}${t.singleForm ? ' <span class="one-word-badge">كلمة واحدة</span>' : ''}</span>
         <span class="tense-badge ${t.cls}">${t.nameIt}</span>
       </div>
-      <div class="conj-grid">${rows}</div>
+      ${bodyHtml}
       <div class="row-actions">
         <button class="btn btn-secondary btn-sm btn-check-tense">تحقق</button>
       </div>`;
-    sec.querySelector('.btn-check-tense').addEventListener('click', () => checkTense(sec, tenseKey, forms));
+    sec.querySelector('.btn-check-tense').addEventListener('click', () => checkTense(sec, tenseKey, forms, single));
     return sec;
   }
 
-  function checkTense(sec, tenseKey, forms) {
+  function checkTense(sec, tenseKey, forms, isSingle) {
+    if (isSingle) {
+      const row = sec.querySelector('.conj-row');
+      const input = row.querySelector('.conj-input');
+      const mark = row.querySelector('.check-mark');
+      const expected = normalizeText(forms.io || '');
+      const actual = normalizeText(input.value);
+      if (actual !== '' && actual === expected) {
+        mark.textContent = '✓'; mark.className = 'check-mark ok';
+        input.className = 'conj-input ok';
+        state.tenseChecks[tenseKey] = { checked: true, allCorrect: true };
+        toast('✓ صحيح', 'ok');
+      } else {
+        mark.textContent = '✗'; mark.className = 'check-mark no';
+        input.className = 'conj-input no';
+        state.tenseChecks[tenseKey] = { checked: true, allCorrect: false };
+        toast('✗ راجع الإجابة', 'warn');
+      }
+      return;
+    }
+
     const rows = sec.querySelectorAll('.conj-row');
     let allCorrect = true;
     rows.forEach(row => {
@@ -738,6 +825,10 @@ body { min-height:100vh; }
     const actual = normalizeText($('#meaningInput').value);
     const correct = actual !== '' && actual === expected;
     state.meaningChecked = true;
+
+    // ⭐ نكشف الفعل الآن (بعد محاولة المستخدم)
+    revealTitleVerb(v, true);
+
     const mi = $('#meaningInput');
     mi.disabled = true;
     mi.className = 'input ltr ' + (correct ? 'ok' : 'no');
@@ -751,35 +842,50 @@ body { min-height:100vh; }
   function revealNext() {
     const v = state.queue[0]; if (!v) return;
     if (state.revealStage === 0) {
+      // ⭐ نكشف الفعل في العنوان + نشغّل النطق
+      revealTitleVerb(v, true);
+
       const mi = $('#meaningInput');
       mi.value = v.infinitive || ''; mi.disabled = true; mi.className = 'input ltr revealed';
       $('#meaningFeedback').innerHTML = '<span class="feedback-revealed">👁 تم إظهار الفعل</span>';
       $('#btnCheckMeaning').disabled = true;
       state.meaningChecked = true; state.revealStage = 1;
-      Speech.speak(v.infinitive);
     } else {
       const enabled = TENSE_ORDER.filter(t => v.tenses && v.tenses[t]);
       const idx = state.revealStage - 1;
       if (idx >= enabled.length) return;
       const key = enabled[idx];
+      const forms = v.tenses[key];   // ⭐ نُخرجها خارج if لتفادي خطأ البرمجة السابق
       const sec = document.querySelector(`.conjugation-section[data-tense="${key}"]`);
+
       if (sec) {
-        const forms = v.tenses[key];
-        sec.querySelectorAll('.conj-row').forEach(row => {
-          const p = row.dataset.pronoun;
+        const single = TENSES[key].singleForm && isUniformForms(forms);
+        if (single) {
+          const row = sec.querySelector('.conj-row');
           const input = row.querySelector('.conj-input');
           const mark = row.querySelector('.check-mark');
-          input.value = forms[p] || '';
+          input.value = forms.io || '';
           input.disabled = true;
           input.className = 'conj-input revealed';
           mark.textContent = '👁'; mark.className = 'check-mark revealed';
-        });
+        } else {
+          sec.querySelectorAll('.conj-row').forEach(row => {
+            const p = row.dataset.pronoun;
+            const input = row.querySelector('.conj-input');
+            const mark = row.querySelector('.check-mark');
+            input.value = forms[p] || '';
+            input.disabled = true;
+            input.className = 'conj-input revealed';
+            mark.textContent = '👁'; mark.className = 'check-mark revealed';
+          });
+        }
         state.tenseChecks[key] = { checked: true, allCorrect: false, revealed: true };
       }
       state.revealStage++;
       toast(`تم إظهار ${TENSES[key].label}`);
-      const first = forms.io || forms[PRONOUNS[0]];
-      if (first) Speech.speak(first);
+
+      const toSpeak = single ? (forms.io || '') : (forms.io || forms[PRONOUNS[0]] || '');
+      if (toSpeak) Speech.speak(toSpeak);
     }
     updateRevealButton();
   }
@@ -882,22 +988,38 @@ body { min-height:100vh; }
       const el = document.createElement('div');
       el.className = 'tense-editor' + (enabled ? ' enabled' : '');
       el.dataset.tense = key;
-      const rows = PRONOUNS.map(p => {
-        const val = existing ? (existing[p] || '') : '';
-        return `<div class="conj-edit-row">
-          <span class="pronoun">${PRONOUN_LABELS[p]}</span>
-          <input type="text" class="input ltr conj-edit-input" data-pronoun="${p}" dir="ltr"
-            value="${escapeHtml(val)}" autocomplete="off" autocapitalize="off" spellcheck="false" autocorrect="off" />
-        </div>`;
-      }).join('');
+
+      let bodyInner;
+      if (t.singleForm) {
+        // ⭐ حقل إدخال واحد لزمن الماضي التام
+        const uniform = isUniformForms(existing);
+        const val = uniform ? existing.io : (existing && existing.io ? existing.io : '');
+        const showHint = existing && !uniform;
+        bodyInner = `
+          <label class="field-label" style="margin-bottom:6px;">اكتب الكلمة (نفسها لكل الضمائر)</label>
+          <input type="text" class="input ltr conj-single-input" dir="ltr"
+            value="${escapeHtml(val)}" placeholder="parlato"
+            autocomplete="off" autocapitalize="off" spellcheck="false" autocorrect="off" />
+          ${showHint ? '<div class="conj-uniform-hint">⚠️ التصريفات المحفوظة حالياً مختلفة — عند الحفظ ستُوحَّد في كلمة واحدة.</div>' : ''}`;
+      } else {
+        bodyInner = PRONOUNS.map(p => {
+          const val = existing ? (existing[p] || '') : '';
+          return `<div class="conj-edit-row">
+            <span class="pronoun">${PRONOUN_LABELS[p]}</span>
+            <input type="text" class="input ltr conj-edit-input" data-pronoun="${p}" dir="ltr"
+              value="${escapeHtml(val)}" autocomplete="off" autocapitalize="off" spellcheck="false" autocorrect="off" />
+          </div>`;
+        }).join('');
+      }
+
       el.innerHTML = `
         <label class="tense-editor-header">
           <input type="checkbox" class="tense-toggle" ${enabled ? 'checked' : ''} ${t.required ? 'disabled' : ''} />
-          <span class="tense-editor-label">${t.label}</span>
+          <span class="tense-editor-label">${t.label}${t.singleForm ? ' <span class="one-word-badge">كلمة واحدة</span>' : ''}</span>
           ${t.required ? '<span class="required-badge">مطلوب</span>' : ''}
           <span class="tense-badge ${t.cls}">${t.nameIt}</span>
         </label>
-        <div class="tense-editor-body" ${enabled ? '' : 'hidden'}>${rows}</div>`;
+        <div class="tense-editor-body" ${enabled ? '' : 'hidden'}>${bodyInner}</div>`;
       container.appendChild(el);
     });
     container.querySelectorAll('.tense-toggle').forEach(cb => {
@@ -931,6 +1053,17 @@ body { min-height:100vh; }
       const key = ed.dataset.tense;
       const toggle = ed.querySelector('.tense-toggle');
       if (!toggle.checked) continue;
+
+      // ⭐ الماضي التام: حقل واحد → نوزّعه على 6 ضمائر
+      if (TENSES[key].singleForm) {
+        const single = (ed.querySelector('.conj-single-input')?.value || '').trim();
+        if (!single) { toast(`أدخل تصريف ${TENSES[key].label}`, 'err'); return; }
+        const forms = {};
+        PRONOUNS.forEach(p => forms[p] = single);
+        tenses[key] = forms;
+        continue;
+      }
+
       const forms = {};
       let allFilled = true;
       ed.querySelectorAll('.conj-edit-input').forEach(inp => {
@@ -1149,7 +1282,6 @@ body { min-height:100vh; }
     $('#bootScreen').hidden = true;
     $('#errorScreen').hidden = false;
     $('#errorMessage').textContent = msg || 'خطأ غير معروف';
-    // ملء صندوق التشخيص
     const proj = (window.firebase && firebase.apps.length) ? firebase.app().options.projectId : '(not initialized)';
     $('#errorDiag').textContent =
       `projectId: ${proj}\n` +
@@ -1164,8 +1296,6 @@ body { min-height:100vh; }
     try {
       await Store.init(m => { setBootText(m); });
       Speech.setFallbackHandler(m => toast(m, 'warn'));
-
-      // ⭐ تشخيص مرئي صغير في شاشة التحميل
       setBootDiag(`project: ${Store.getProjectId()} · path: ${Store.getPath()}`);
 
       setBootText('جارٍ تحميل الأفعال…');
